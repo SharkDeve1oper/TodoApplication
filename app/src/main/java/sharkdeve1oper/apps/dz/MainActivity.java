@@ -69,28 +69,25 @@ public class MainActivity extends AppCompatActivity {
         };
         listView.setAdapter(arrayAdapter);
 
-        addButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String task = editText.getText().toString();
-                if (!task.isEmpty()) {
-                    if (tasks.contains(task)) {
-                        Toast.makeText(MainActivity.this, "Задача уже существует", Toast.LENGTH_SHORT).show();
-                    } else {
-                        tasks.add(task);
-                        sortTasks();
-                        arrayAdapter.notifyDataSetChanged();
-
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        Set<String> set = new HashSet<>(MainActivity.this.tasks);
-                        editor.putStringSet("tasks", set);
-                        editor.apply();
-
-                        editText.setText("");
-                    }
+        addButton.setOnClickListener(v -> {
+            String task = editText.getText().toString();
+            if (!task.isEmpty()) {
+                if (tasks.contains(task)) {
+                    Toast.makeText(MainActivity.this, "Задача уже существует", Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(MainActivity.this, "Введите задачу", Toast.LENGTH_SHORT).show();
+                    tasks.add(task);
+                    sortTasks();
+                    arrayAdapter.notifyDataSetChanged();
+
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    Set<String> set = new HashSet<>(MainActivity.this.tasks);
+                    editor.putStringSet("tasks", set);
+                    editor.apply();
+
+                    editText.setText("");
                 }
+            } else {
+                Toast.makeText(MainActivity.this, "Введите задачу", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -120,17 +117,19 @@ public class MainActivity extends AppCompatActivity {
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
             builder.setTitle("Удалить задачу");
             builder.setMessage("Вы уверены, что хотите удалить эту задачу?");
-            builder.setPositiveButton("Да", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int which) {
-                    tasks.remove(position);
-                    sortTasks();
-                    arrayAdapter.notifyDataSetChanged();
+            builder.setPositiveButton("Да", (dialog, which) -> {
+                String task = tasks.get(position);
+                tasks.remove(position);
+                completedTasks.remove(task); // remove task from completedTasks
+                sortTasks();
+                arrayAdapter.notifyDataSetChanged();
 
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    Set<String> set = new HashSet<>(MainActivity.this.tasks);
-                    editor.putStringSet("tasks", set);
-                    editor.apply();
-                }
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                Set<String> set = new HashSet<>(MainActivity.this.tasks);
+                editor.putStringSet("tasks", set);
+                Set<String> completedSet1 = new HashSet<>(MainActivity.this.completedTasks);
+                editor.putStringSet("completedTasks", completedSet1); // save updated completedTasks
+                editor.apply();
             });
             builder.setNegativeButton("Нет", null);
             builder.show();
